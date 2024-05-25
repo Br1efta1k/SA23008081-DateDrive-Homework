@@ -1,35 +1,35 @@
-# Load necessary library
-library(devtools)
+#---------------------------------
+#Script Name
+#Purpose:
+  #this homework is about
+  #-searching and installing packages
+  #-application of the packages
+  #-getting help of the package
+#Author:  botaoyuan
+#Email:  botaoyuan@foxmail.com
+#Date:  2024/05/08  edit
+#
+#-------------------------------
+cat("\014") #clears the console
+rm(list = ls()) #remove all variables
 
-# Install the devtools package if not already installed
-if (!requireNamespace("devtools", quietly = TRUE)) {
-  install.packages("devtools")
-}
-
-# Check if tidyverse is installed
-if (!requireNamespace("tidyverse", quietly = TRUE)) {
-  # Install tidyverse package
-  devtools::install.packages("tidyverse")
-}
+# Check if tidyverse is installed, if not install it
+if (!requireNamespace("tidyverse", quietly = TRUE)){install.packages(tidyverse)}
 
 # Load the tidyverse package
 library(tidyverse)
 
-# Access the package's functions
-# For example, let's use the ggplot function
-# Create a simple scatter plot
-ggplot(mpg, aes(x = displ, y = hwy)) +
-  geom_point()
+# Access some functions from the tidyverse package
+# For example, use the ggplot() function
+ggplot(mtcars, aes(x = mpg, y = disp)) + geom_point()
 
-# Get help documentation for a function
-# For example, let's get help for the ggplot function
+# Get help documentation for a function in the tidyverse package
 ?ggplot
 
-# Alternatively, you can use the following command to get help
-#help("ggplot")
+help(package="tidyverse")#find help
+demo(package="tidyverse")#find the application of the package
 
-# Save the plot to a file
-ggsave("scatter_plot.png")
-
-# Print message indicating successful completion
-cat("All tasks completed successfully!\n")
+#find help
+apropos("^tidyverse")
+ls("package:tidyverse")
+help.search("^tidyverse")
