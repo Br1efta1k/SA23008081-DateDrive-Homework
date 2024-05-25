@@ -1,3 +1,14 @@
+#---------------------------------
+#Script Name
+#Purpose:homework3
+#Author:  botaoyuan
+#Email:  botaoyuan@foxmail.com
+#Date:  2024/05/08  edit
+#
+#-------------------------------
+cat("\014") #clears the console
+rm(list = ls()) #remove all variables
+
 # Create a sample data frame 
 plant_height <- data.frame(
   Day = 1:5,
@@ -15,6 +26,10 @@ write.csv(plant_height, "Prepare for homework3.csv", row.names = FALSE)
 
 # Return message
 cat("CSV file has been created and saved as Prepare for homework3.csv\n")
+
+#导入csv文件并保存
+csv_data<-read.csv("/home/botaoyuan/Connect to Github/Prepare for homework3.csv")
+print(csv_data) 
 
 # Load necessary libraries
 library(tidyverse)
