@@ -1,3 +1,14 @@
+#---------------------------------
+#Script Name
+#Purpose:homework5
+#Author:  botaoyuan
+#Email:  botaoyuan@foxmail.com
+#Date:  2024/05/11  edit
+#
+#-------------------------------
+cat("\014") #clears the console
+rm(list = ls()) #remove all variables
+
 # Load required packages
 
 library(DBI)   # Interface for database communication
