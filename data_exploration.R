@@ -1,72 +1,73 @@
+#---------------------------------
+#Script Name
+#Purpose:homework6
+#Author:  botaoyuan
+#Email:  botaoyuan@foxmail.com
+#Date:  2024/05/13  edit
+#
+#-------------------------------
+# Clear console and remove all variables
+cat("\014")
+rm(list = ls())
+
 # Load required libraries
-library(MASS)  # For Doubs dataset
-library(vegan)  # For CCA and multivariate analysis
-library(corrplot)  # For visualizing correlations
-library(car)  # For Variance Inflation Factor (VIF)
+library(ade4)
+library(corrplot)
+library(car)
+library(dplyr)
 
-# Load the Doubs dataset
-data(doubs, package = "ade4")
+# Load Doubs dataset
+data(doubs)
 
-# Extract fish and environmental data
-fish <- doubs$fish
-env <- doubs$env
+# Remove missing values
+env <- na.omit(doubs$env) 
+fish <- na.omit(doubs$fish)
+xy <- na.omit(doubs$xy)
+spe <- na.omit(doubs$species)
 
-# Remove rows with any missing data from the environmental dataset
-env_clean <- na.omit(env)
+# Check the structure and summary of the datasets
+str(env)
+str(spe)
+summary(spe)
 
-# Step 1: Check for multicollinearity among environmental factors
-if (ncol(env_clean) > 1) {
-  # Calculate the correlation matrix
-  cor_matrix <- cor(env_clean)
-  
-  # Visualize the correlation matrix
-  corrplot(cor_matrix, method = "circle")
-  
-  # Calculate Variance Inflation Factors (VIF)
-  tryCatch({
-    # Build a linear model with environmental variables
-    vif_model <- lm(as.matrix(env_clean) ~ 1)
-    vif_results <- vif(vif_model)
-    
-    # Display VIF results
-    print("Variance Inflation Factors:")
-    print(vif_results)
-    
-    # Check for high VIF (commonly, VIF > 10 indicates multicollinearity)
-    if (any(vif_results > 10)) {
-      message("Warning: High multicollinearity detected among environmental factors.")
-    }
-  }, error = function(e) {
-    message("Error calculating VIF: ", e$message)
-  })
+# Check for multicollinearity among environmental factors
+cor_matrix <- cor(env)
+indices <- which(upper.tri(cor_matrix) & cor_matrix > 0.7, arr.ind = TRUE)
+var_names <- colnames(cor_matrix)
+
+if (length(indices) > 0) {
+  cat("Highly collinear variables detected:\n")
+  for (i in 1:nrow(indices)) {
+    cat(var_names[indices[i, "row"]],
+        "and",
+        var_names[indices[i, "col"]],
+        "have a correlation of",
+        cor_matrix[indices[i, "row"], indices[i, "col"]],
+        "\n")
+  }
 } else {
-  warning("Not enough environmental variables to check for multicollinearity.")
+  cat("No correlations above 0.7\n")
 }
 
-# Step 2: Analysis of relationships between fish and environmental factors with CCA
+# Remove highly collinear variables
+env_clean <- subset(env, select = !(colnames(env) %in% c("pho", "amm")))
 
-# Remove rows with all zero values from the fish data
-non_zero_rows <- rowSums(fish) > 0
-fish_clean <- fish[non_zero_rows, ]
+# Check VIF for multicollinearity in predicting fish presence
+lm_model <- lm(fish$Lece ~ ., data = env)
+vif_results <- car::vif(lm_model)
 
-# Align the cleaned environmental data with the cleaned fish data
-env_clean <- env_clean[non_zero_rows, ]
-
-# Check for alignment consistency
-if (nrow(fish_clean) == nrow(env_clean)) {
-  # Perform Canonical Correspondence Analysis (CCA)
-  cca_result <- cca(fish_clean ~ ., data = env_clean)
-  
-  # Display the summary of CCA
-  summary(cca_result)
-  
-  # Plot the CCA results with sites and environmental vectors
-  plot(cca_result, scaling = 2, display = c("sites", "bp"), main = "CCA of Fish and Environmental Factors")
-  
-  # Additional visualization with species and environmental vectors
-  plot(cca_result, scaling = 2, display = c("species", "bp"), type = "n", main = "CCA: Species and Environmental Vectors")
-  text(cca_result, display = "species", col = "red", cex = 0.8)  # Add species names
-  arrows(0, 0, scores(cca_result, display = "bp")[, 1], scores(cca_result, display = "bp")[, 2], col = "blue", length = 0.1)  # Environmental vectors
+if (any(vif_results > 10)) {
+  cat("Variables with VIF > 10 indicating multicollinearity:\n")
+  print(vif_results[vif_results > 10])
 } else {
-  warning("Mismatch between cleaned fish data and environmental data. Check data consistency.")
+  cat("No multicollinearity detected among environmental factors.\n")
 }
+
+# Build a linear regression model to analyze the relationship between fish presence and environmental factors
+lm_model2 <- lm(fish$Lece ~ ., data = env_clean)
+summary(lm_model2)
+
+# Visualize the correlation between fish presence and environmental factors
+lece_env <- bind_cols(select(fish, 10), select(env_clean, 1:7))  # Adjusted column indices
+corr_lece <- cor(lece_env)
+corrplot(corr_lece, method = "circle")
